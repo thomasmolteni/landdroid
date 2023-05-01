@@ -59,11 +59,12 @@ client.on("interactionCreate", async interaction => {
     }
 
     if (interaction.commandName == "memberinfo") {
-        const utente = interaction.options.member ? interaction.options.getUser(member) : interaction.member
+        const user = interaction.options.getUser("user");
+        const member = interaction.guild.members.cache.get(user.id);
         var embedMemberinfo = new Discord.MessageEmbed()
             .setColor("#2B2D31")
-            .setThumbnail(utente.user.avatarURL())
-            .setDescription(`<:IconDot:1100515652457992234> **Username:** ${interaction.user.tag} \n<:IconDot:1100515652457992234> **User ID:** ${interaction.user.id} \n<:IconDot:1100515652457992234> **Joined at:** <t:${Math.floor(interaction.member.joinedTimestamp / 1000)}:D> \n<:IconDot:1100515652457992234> **Created at:** <t:${Math.floor(interaction.user.createdTimestamp / 1000)}:D>`)
+            .setThumbnail(user.avatarURL())
+            .setDescription(`<:IconDot:1100515652457992234> **Username:** ${user.tag} \n<:IconDot:1100515652457992234> **User ID:** ${user.id} \n<:IconDot:1100515652457992234> **Joined at:** <t:${Math.floor(member.joinedTimestamp / 1000)}:D> \n<:IconDot:1100515652457992234> **Created at:** <t:${Math.floor(user.createdTimestamp / 1000)}:D>`)
 
         interaction.reply({ embeds: [embedMemberinfo] })
     }
