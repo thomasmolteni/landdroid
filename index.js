@@ -1,213 +1,145 @@
-const Discord = require("discord.js")
-const client = new Discord.Client({
-     intents: ["GUILDS", "GUILD_MEMBERS", "GUILD_MESSAGES", "GUILD_INTEGRATIONS", "GUILD_PRESENCES"] 
-})
+const Discord = require("discord.js");
+const client = new Discord.Client({ intents: ["GUILDS", "GUILD_MEMBERS", "GUILD_MESSAGES", "GUILD_INTEGRATIONS", "GUILD_PRESENCES", "GUILD_VOICE_STATES", "GUILD_SCHEDULED_EVENTS", ""] });
 
-// Slash Commands + Status
+// Comandi + Stato
 
 client.on('ready', () => {
-    client.user.setStatus("online");
-    client.user.setActivity("Land Citizens", { type: "LISTENING" });
+    client.user.setActivity("Land Citizens", { type: "LISTENING" }) // Online
+    // client.user.setStatus("idle") // Maintenance
 
     client.guilds.cache.forEach(guild => {
         guild.commands.create({
-            name: "help",
-            description: "Chiedi aiuto sui miei comandi"
-        })
-
-        guild.commands.create({
             name: "memberinfo",
             description: "Ottieni le informazioni sull'utente selezionato",
-            options: [
-                {
-                    name: "user",
-                    description: "Le informazioni sull'utente da mostrare",
-                    type: "USER",
-                    required: false
-                }
-            ]
-        })
-
-        guild.commands.create({
-            name: "ping",
-            description: "Ottieni il ping del Bot"
-        })
-
-        guild.commands.create({
-            name: "serverinfo",
-            description: "Ottieni le informazioni su DARK3R's Land"
-        })
-
-        guild.commands.create({
-            name: "sourcecode",
-            description: "Ottieni il mio Codice Sorgente su GitHub"
+            options:
+                [
+                    {
+                        name: "user",
+                        description: "Le informazioni sull'utente da mostrare",
+                        type: "USER",
+                        required: true
+                    }
+                ]
         })
     })
 })
 
-// Comandi
+// Risposta comandi
 
-client.on("interactionCreate", async interaction => {
+client.on("interactionCreate", async (interaction) => {
     if (!interaction.isCommand()) return
 
-    if (interaction.commandName == "help") {
-        var embedHelp = new Discord.MessageEmbed()
-            .setColor("#2B2D31")
-            .setDescription("<:IconDot:1100515652457992234> **Aiuto su /memberinfo** \nQuesto comando mostra le informazioni sul membro selezionato. Queste informazioni includono: Username, ID, Data di Creazione e Data di Unione \n\n<:IconDot:1100515652457992234> **Aiuto su /ping** \nQuesto comando mostra il Ping di Land Droid \n\n<:IconDot:1100515652457992234> **Aiuto su /serverinfo** \nQuesto comando mostra le informazioni sul server. Queste informazioni includono: Nome, Membri Totali, Nitro Boost, Livello del Server e Data di Rilascio \n\n<:IconDot:1100515652457992234> **Comando Source Code** \nQuesto comando mostra il link della Repository di GitHub per Land Droid")
-
-        interaction.reply({ embeds: [embedHelp] })
-    }
-
+    // /memberinfo
     if (interaction.commandName == "memberinfo") {
         const user = interaction.options.getUser("user");
         const member = interaction.guild.members.cache.get(user.id);
-        var embedMemberinfo = new Discord.MessageEmbed()
-            .setColor("#2B2D31")
-            .setThumbnail(user.avatarURL())
-            .setDescription(`<:IconDot:1100515652457992234> **Username:** ${user.tag} \n<:IconDot:1100515652457992234> **User ID:** ${user.id} \n<:IconDot:1100515652457992234> **Joined at:** <t:${Math.floor(member.joinedTimestamp / 1000)}:D> \n<:IconDot:1100515652457992234> **Created at:** <t:${Math.floor(user.createdTimestamp / 1000)}:D>`)
-
-        interaction.reply({ embeds: [embedMemberinfo] })
-    }
-
-    if (interaction.commandName == "ping") {
-        var embedPing = new Discord.MessageEmbed()
-            .setColor("#2B2D31")
-            .setAuthor({ name:"Land Droid#8824", iconURL: "https://cdn.discordapp.com/avatars/1057297659087573022/74e3f481a38d7fe45d4d190427154f52.png?size=1024"})
-            .setDescription(`<:IconDot:1100515652457992234> **Battito Cardiaco:** ${client.ws.ping}ms`)
-
-        interaction.reply({ embeds: [embedPing] })
-    }
-
-    if (interaction.commandName == "serverinfo") {
-        var server = interaction.guild;
-        var embedServerinfo = new Discord.MessageEmbed()
-            .setColor("#2B2D31")
-            .setThumbnail(server.iconURL({ dynamic: true }))
-            .setDescription(`<:IconDot:1100515652457992234> **Server Name:** ${interaction.guild.name} \n<:IconDot:1100515652457992234> **Total Members:** ${interaction.guild.memberCount} Membri \n<:IconDot:1100515652457992234> **Nitro Boosts:** ${interaction.guild.premiumSubscriptionCount} Boosts \n<:IconDot:1100515652457992234> **Server Level:** Level ${interaction.guild.premiumTier} \n<:IconDot:1100515652457992234> **Date Released:** <t:${Math.floor(interaction.guild.createdTimestamp / 1000)}:D>`)
         
-        interaction.reply({ embeds: [embedServerinfo] })
-    }
+        var embedMemberInfo = new Discord.MessageEmbed()
+            .setColor("#2B2D31")
+            .setAuthor({ name: `${user.username}`, iconURL: user.avatarURL({ dynamic: true }) })
+            .addFields
+            (
+                { name: "User ID:", value: "```" + `${user.id}` + "```", inline: false },
+                { name: "Achievements: ", value: "```0```", inline: false},
+                { name: "Created at:", value: "```" + `- ${Math.floor((new Date() - user.createdAt) / (1000 * 60 * 60 * 24))} giorni fa \n- ${user.createdAt.toDateString()} \n- ${user.createdAt.toTimeString().split(' ')[0]} GMT` + "```", inline: true },
+                { name: "Joined at:", value: "```" + `- ${Math.floor((new Date() - member.joinedAt) / (1000 * 60 * 60 * 24))} giorni fa \n- ${member.joinedAt.toDateString()} \n- ${member.joinedAt.toTimeString().split(' ')[0]} GMT` + "```", inline: true },
+            )
 
-    if (interaction.commandName == "sourcecode") {
-        interaction.reply({ content: "https://github.com/thomasmolteni/landdroid" })
+            interaction.reply({ embeds: [embedMemberInfo] })
     }
 })
 
-// Embed
+// Messaggi
 
 client.on("messageCreate", async (message) => {
-    // #information
-    if (message.content == "?information") {
-        var embedInformation1 = new Discord.MessageEmbed()
+    // #rules
+    if (message.content == "?rules") {
+        var embedRules = new Discord.MessageEmbed()
             .setColor("#2B2D31")
-            .setImage("https://media.discordapp.net/attachments/1077684809725390869/1077708711449083956/Information.png?width=1440&height=359")
+            .setDescription("## <:RulesIcon:1187827242152251493> Server Rules \nLa tua presenza qui implica l'accettazione di queste regole e di eventuali aggiornamenti futuri. Le modifiche possono avvenire senza preavviso, quindi rimani aggiornato. Mostra comprensione quando i moderatori garantiscono un ambiente pacifico. \n\n- **Rispetta Tutti:** Tratta tutti i membri allo stesso modo e con rispetto, indipendentemente dalle differenze di credo. Non intraprendere alcuna forma di molestia, bullismo o attacchi mirati nei confronti degli altri membri. \n- **Family-Friendly:** Usa soprannomi e immagini del profilo rispettosi; evitare contenuti offensivi o innapropriati. Mantieni il server family-friendly evitando di pubblicare contenuti di natura sessuale. \n- **Canali Pertinenti:** Pubblica contenuti nei canali appropriati per mantenere le discussioni organizzate. Evita conversazioni fuori tema nei canali designati per argomenti specifici. \n- **Segui le Regole di Discord:** Rispetta i Termini di Servizio di Discord e le Linee Guida della Community.")
 
-        var embedInformation2 = new Discord.MessageEmbed()
-            .setColor("#2B2D31")
-            .setDescription("<:IconDot:1100515652457992234> **Benvenuto sul DARK3R's Official Discord Server!** \nGrazie mille per esserti unito. Questo server è completamente basato su DARK3R per consentire ai suoi seguaci e amici di comunicare tra loro. \n\n<:IconDot:1100515652457992234> **Server Information** \n<:ReplyContinued:1022586643506528336> Owned by: <@709672125354606592> \n<:Reply:1022586641908514966> Release Date: <t:1598476740:D>")
+        var buttonToS = new Discord.MessageButton()
+            .setStyle("LINK")
+            .setLabel("Terms of Service")
+            .setURL("https://discord.com/terms")
 
-        var buttonServerRules = new Discord.MessageButton()
-            .setStyle("SECONDARY")
-            .setLabel("Server Rules")
-            .setEmoji("<:emoji_rules:1005004300763811862>")
-            .setCustomId("buttonServerRulesID")
+        var buttonGuidelines = new Discord.MessageButton()
+            .setStyle("LINK")
+            .setLabel("Community Guidelines")
+            .setURL("https://discord.com/guidelines")
 
-        var buttonAssignRoles = new Discord.MessageButton()
-            .setStyle("SECONDARY")
-            .setLabel("Assign Roles")
-            .setEmoji("<:emoji_paint:1009852243610194021>")
-            .setCustomId("buttonAssignRolesID")
+        var rowLinks = new Discord.MessageActionRow()
+            .addComponents(buttonToS, buttonGuidelines)
 
-        var buttonGetStarted = new Discord.MessageButton()
-            .setStyle("SECONDARY")
-            .setLabel("Get Started")
-            .setEmoji("<:emoji_backpack:1005010361570820096>")
-            .setCustomId("buttonGetStartedID")
-
-        var rowInformation = new Discord.MessageActionRow()
-            .addComponents(buttonServerRules, buttonAssignRoles, buttonGetStarted)
-
-        message.channel.send({ embeds: [embedInformation1, embedInformation2], components: [rowInformation] })
+        await message.delete()
+        await message.channel.send({ embeds: [embedRules], components: [rowLinks] })
     }
 
-    // #create-tickets
-    if (message.content == "?create-tickets") {
-        var embedCreateTickets1 = new Discord.MessageEmbed()
+    // #roles
+    if (message.content == "?roles") {
+        var embedServerRoles = new Discord.MessageEmbed()
             .setColor("#2B2D31")
-            .setImage("https://media.discordapp.net/attachments/1077684809725390869/1077708981142827149/Create_Tickets.png?width=1440&height=359")
+            .setDescription("## <:RolesIcon:1187827243913842800> Server Roles \nQuali sono i ruoli sul server, cosa fanno e come si ottengono? \n\n- <@&1099456728451514439>: Bot specializzati per divertimento, organizzazione e funzionalità aggiuntive nella community. Assegnato dagli amministratori del server. \n- <@&1100180052051763230>: Team dedicato che mantiene un ambiente sicuro e piacevole rispettando le regole e promuovendo interazioni positive. Selezionato dagli amministratori del server. \n- <@&1100355896611180605>: Bot aggiuntivi utili per varie funzioni, scelti con cura per la community. Selezionato dagli amministratori del server. \n- <@&1100356406680502334>: Sostenitori della pagina Facebook di DARK3R o dell'iscrizione al canale YouTube. Ottenuto diventando sostenitore o membro. \n- <@&988436752278646825>: Individui generosi che potenziano il server con Discord Nitro, sbloccando vantaggi. Ottenuto potenziando il server. \n- <@&1100177512081920070>: Giocatori sul server PandesalSMP con accesso ai canali correlati. Ottenuto tramite un modulo di domanda di Minecraft. \n- <@&1100180049933635585>: Creatori attivi che producono contenuti per i propri follower su piattaforme come YouTube, Facebook, Twitch... . Ottenibile soddisfando i requisiti di creazione di contenuti e condividendo i link ai canali nel canale delle promozioni.")
 
-        var embedCreateTickets2 = new Discord.MessageEmbed()
+        await message.delete()
+        await message.channel.send({ embeds: [embedServerRoles] })
+    }
+
+    // #form
+    if (message.content == "?form") {
+        var embedMinecraftForm = new Discord.MessageEmbed()
             .setColor("#2B2D31")
-            .setDescription("<:IconDot:1100515652457992234> **Crea un Support Tickets** \nSe hai un problema e hai bisogno di aiuto, crea un ticket in modo che i moderatori possano aiutarti. Se crei un ticket senza motivo, verrai avvisato. \n\n<:IconDot:1100515652457992234> **Puoi creare un ticket per...** \n<:ReplyContinued:1022586643506528336> Segnalare un Membro \r<:ReplyContinued:1022586643506528336> Segnalare un Bug del Server \r<:ReplyContinued:1022586643506528336> Reclamare il tuo Ruolo \r<:Reply:1022586641908514966> Chiedere qualcosa di Importante")
+            .setDescription("## <:FormsIcon:1187827246367514645> Minecraft Application Form \nPer unirti al nostro server Minecraft, leggi le regole del server e completa il modulo di richiesta. Esamineremo la tua domanda entro pochi giorni e ti faremo sapere se sei stato accettato. \n\n- **Respect Builds:** Sii rispettoso delle creazioni degli altri giocatori. Evita di danneggiare intenzionalmente o di prendere le loro cose senza permesso. Mostra gentilezza rispettando il loro lavoro. \n- **Fair Play:** Gioca onestamente senza imbrogliare o ottenere vantaggi ingiusti. Inoltre, astieniti dal creare dispositivi di redstone che potrebbero causare ritardi nel server e interrompere l'esperienza di tutti. \n- **Sii Gentile:** Tratta gli altri con rispetto ed empatia. Evita il bullismo o l'uso di un linguaggio offensivo. Chiedi sempre il permesso prima di impegnarti in un combattimento giocatore contro giocatore. Ricordati di divertirti e di collaborare all'interno della community SMP di Minecraft per promuovere un ambiente positivo e creativo.")
+
+        var buttonApplicationForm = new Discord.MessageButton()
+            .setStyle("SECONDARY")
+            .setLabel("Application Form")
+            .setCustomId("buttonApplicationFormID")
+            .setDisabled(true)
+
+        var rowMinecraftForm = new Discord.MessageActionRow()
+            .addComponents(buttonApplicationForm)
+
+        await message.delete()
+        await message.channel.send({ embeds: [embedMinecraftForm], components: [rowMinecraftForm] })
+    }
+
+    // #pandesal-info
+    if (message.content == "?pandesal-info") {
+        var embedPandesalInfo = new Discord.MessageEmbed()
+            .setColor("#2B2D31")
+            .setDescription("## <:PinIcon:1188206574922117170> Pandesal SMP Information \nQuesta categoria è riservata esclusivamente ai membri di Pandesal SMP. È uno spazio per la comunicazione, anche se non stai giocando a Minecraft. Ricevi aggiornamenti, notizie e annunci sulla nostra community SMP di Minecraft qui. \n\n- **Server Address:** pandesalmc.aternos.me \n- **Bedrock Port:** 29767")
+
+        var buttonHostingPartner = new Discord.MessageButton()
+            .setStyle("LINK")
+            .setLabel("Hosting Partner")
+            .setURL("https://aternos.org")
+
+        var buttonServerWebsite = new Discord.MessageButton()
+            .setStyle("LINK")
+            .setLabel("Server Website")
+            .setURL("https://pandesalmc.carrd.co")
         
-        var buttonAskQuestions = new Discord.MessageButton()
-            .setStyle("SECONDARY")
-            .setLabel("Ask Questions")
-            .setEmoji("<:emoji_personheadphones:1012423827499778209>")
-            .setCustomId("buttonAskQuestionsID")
-        
-        var buttonReportUsers = new Discord.MessageButton()
-            .setStyle("SECONDARY")
-            .setLabel("Report Users")
-            .setEmoji("<:emoji_personmessage:1012423829152346143>")
-            .setCustomId("buttonReportUsersID")
+        var rowPandesalInfo = new Discord.MessageActionRow()
+            .addComponents(buttonHostingPartner, buttonServerWebsite)
 
-        var buttonOtherConcerns = new Discord.MessageButton()
-            .setStyle("SECONDARY")
-            .setLabel("Other Concerns")
-            .setEmoji("<:emoji_mail:1010906227007574046>")
-            .setCustomId("buttonOtherConcernsID")
-
-        var rowCreateTickets = new Discord.MessageActionRow()
-            .addComponents(buttonAskQuestions, buttonReportUsers, buttonOtherConcerns)
-
-        message.channel.send({ embeds: [embedCreateTickets1, embedCreateTickets2], components: [rowCreateTickets] })
+        await message.delete()
+        await message.channel.send({ embeds: [embedPandesalInfo], components: [rowPandesalInfo] })
     }
 
-    // Ping
-        // @DARK3R
-    var ping = ["<@709672125354606592>"]
-    var trovata = false;
+    // @Land Droid
+    if (message.content == "<@1057297659087573022>")
+        message.reply({ content: "Puoi usare `/` per vedere i comandi " })
 
-    ping.forEach(parola => {
-        if (message.content.includes(parola)) {
-            trovata = true;
+    // @Moderator
+    var pingModerator = ["<@&1100180052051763230>"]
+    var findModerator = false;
+
+    pingModerator.forEach(word => {
+        if (message.content.includes(word)) {
+            findModerator = true;
         }
     })
-
-    if (trovata) {
-        message.reply("DARK3R risponderà tra un momento, per favore spiega il motivo per cui lo hai menzionato. Se l'hai già fatto, fantastico!")
-    }
-
-    // Ping
-        // @Land Droid
-    var ping2 = ["<@1057297659087573022>"]
-    var trovata2 = false;
-
-    ping2.forEach(parola => {
-        if (message.content.includes(parola)) {
-            trovata2 = true;
-        }
-    })
-
-    if (trovata2) {
-        message.reply("Puoi usare `/` per vedere i comandi")
-    }
-
-    // Ping
-        // @Discord Mod
-    var ping3 = ["<@&1100180052051763230>"]
-    var trovata3 = false;
-
-    ping3.forEach(parola => {
-        if (message.content.includes(parola)) {
-            trovata3 = true;
-        }
-    })
-
-    if (trovata3) {
-        message.reply("Se hai bisogno di aiuto dai moderatori, crea un ticket nel canale <#1097996541387620352>")
-    }
 })
 
 // Bottoni
@@ -215,401 +147,317 @@ client.on("messageCreate", async (message) => {
 client.on("interactionCreate", async (interaction) => {
     if (!interaction.isButton()) return
 
-    // Server Rules
-    if (interaction.customId == "buttonServerRulesID") {
-        var embedServerRules1 = new Discord.MessageEmbed()
-            .setColor("#2B2D31")
-            .setImage("https://media.discordapp.net/attachments/1077684809725390869/1077718925984411768/Server_Rules.png?width=1440&height=359")
+    // Application Form
+    if (interaction.customId == "buttonApplicationFormID") {
+        const modalApplicationForm = new Discord.Modal()
+            .setTitle("MinecraftSMP Application Form")
+            .setCustomId("modalApplicationFormID")
 
-        var embedServerRules2 = new Discord.MessageEmbed()
-            .setColor("#2B2D31")
-            .setDescription("<:IconDot:1100515652457992234> **1. Rispetta ogni Membro** \nRispetta tutti i membri su questo server, trattali allo stesso modo rispettivamente indipendentemente dalla tua fede religiosa e opponiti a simpatie e antipatie. Tratta sempre gli altri con il rispetto che vuoi avere in cambio. \n\n<:IconDot:1100515652457992234> **2. No Spamming** \nNon devi spammare nulla sul server, che si tratti di un messaggio, emoji, immagini o qualsiasi cosa necessaria o non necessaria. Ti è proibito, nemmeno erroneamente, compiere tali atti. Dai una possibilità agli altri membri. \n\n<:IconDot:1100515652457992234> **3. No Contenuti Innapropriati/NSFW** \nQuesto server Discord è per persone di tutte le età. I contenuti sessuali sono severamente vietati. Aiutaci a far crescere una comunità familiare. \n\n<:IconDot:1100515652457992234> **4. Usa le Immagini del Profilo e i Soprannomi Appropriati** \nNon consentiamo ai membri di utilizzare soprannomi offensivi, immagini del profilo inadeguate, ad es. sessuale o offensivo per religiosi, politici, ecc. Inoltre, se i nostri moderatori scoprono qualcuno che ha questo, hanno il diritto di cambiare soprannome e cacciare se tu non ascoltare l'avvertimento. \n\n<:IconDot:1100515652457992234> **5. Segui i ToS & le Linee Guida di Discord** \nOltre alle regole di questo server, dai un'occhiata ai Termini di servizio e alle linee guida della community di Discord ufficiali. \n\n<:IconDot:1100515652457992234> **Note Importanti** \nLa tua presenza in questo server implica l'accettazione di queste e tutte le altre regole, comprese tutte le ulteriori modifiche. Queste modifiche possono essere apportate in qualsiasi momento senza preavviso, è tua responsabilità verificarle. Usa il buon senso e astieniti dal lamentarti quando <@&1100180052051763230> tenta di mantenere un ambiente calmo e sicuro nel server.")
+        const username = new Discord.TextInputComponent()
+            .setCustomId("usernameID")
+            .setLabel("What is your Minecraft username?")
+            .setPlaceholder("Write text here")
+            .setStyle("SHORT")
+            .setRequired(true)
 
-        const buttonTerms = new Discord.MessageButton()
-            .setStyle("LINK")
-            .setLabel("Discord's Terms of Services")
-            .setURL("https://discord.com/terms")
+        const age = new Discord.TextInputComponent()
+            .setCustomId("ageID")
+            .setLabel("How old are you?")
+            .setPlaceholder("Write text here")
+            .setStyle("SHORT")
+            .setRequired(true)
 
-        const buttonGuidelines = new Discord.MessageButton()
-            .setStyle("LINK")
-            .setLabel("Discord Community Guidelines")
-            .setURL("https://discord.com/guidelines")
+        const edition = new Discord.TextInputComponent()
+            .setCustomId("editionID")
+            .setLabel("What edition are you using?")
+            .setPlaceholder("Minecraft Java | Bedrock | PE")
+            .setStyle("SHORT")
+            .setRequired(true)
 
-        var rowLinks = new Discord.MessageActionRow()
-            .addComponents(buttonTerms, buttonGuidelines)
+        const type = new Discord.TextInputComponent()
+            .setCustomId("typeID")
+            .setLabel("If using Minecraft Java, Premium or Cracked?")
+            .setPlaceholder("Minecraft Premium | Cracked | Bedrock")
+            .setStyle("SHORT")
+            .setRequired(true)
 
-        interaction.reply({ embeds: [embedServerRules1, embedServerRules2], components: [rowLinks], ephemeral: true })
+        const motivation = new Discord.TextInputComponent()
+            .setCustomId("motivationID")
+            .setLabel("Why should we accept you to this SMP?")
+            .setPlaceholder("Write text here")
+            .setStyle("PARAGRAPH")
+            .setRequired(true)
+
+        const rowUsername = new Discord.MessageActionRow()
+            .addComponents(username)
+
+        const rowAge = new Discord.MessageActionRow()
+            .addComponents(age)
+
+        const rowEdition = new Discord.MessageActionRow()
+            .addComponents(edition)
+
+        const rowType = new Discord.MessageActionRow()
+            .addComponents(type)
+
+        const rowMotivation = new Discord.MessageActionRow()
+            .addComponents(motivation)
+
+        modalApplicationForm.addComponents(rowUsername, rowAge, rowEdition, rowType, rowMotivation);
+
+        await interaction.showModal(modalApplicationForm);
     }
 
-    // Assign Roles
-    if (interaction.customId == "buttonAssignRolesID") {
-        var embedAssignRoles1 = new Discord.MessageEmbed()
-            .setColor("#2B2D31")
-            .setImage("https://media.discordapp.net/attachments/1077684809725390869/1077709082884050964/Assign_Roles.png?width=1440&height=359")
+    // Accept
+    if (interaction.customId == "buttonAcceptID") {
+        const userId = await interaction.message.embeds[0].author.name;
+        const player = await interaction.guild.members.fetch(userId);
+        const roleSMPMember = "1100177512081920070";
 
-        var embedAssignRoles2 = new Discord.MessageEmbed()
-            .setColor("#2B2D31")
-            .setDescription("<:IconDot:1100515652457992234> **Assign Ping Roles** \nPer assicurarti di ricevere notifiche solo per gli argomenti che desideri conoscere. Puoi scegliere più ruoli se lo desideri. Si prega gentilmente di scegliere quando o in quale occasione si desidera ricevere il ping. \n\n<:IconDot:1100515652457992234> **Nota su Land Droid** \nSe premi uno dei pulsanti e non viene visualizzato alcun messaggio, il bot potrebbe essere offline, quindi riprova più tardi. Grazie!")
+        const channelPandesalTownhall = client.channels.cache.get("1121815732724977665");
+        const threadId = await interaction.message.embeds[0].footer.text;
+        const thread = await client.channels.cache.get(threadId);
 
-        var buttonNews = new Discord.MessageButton()
+        var buttonAccept = new Discord.MessageButton()
             .setStyle("SECONDARY")
-            .setLabel("News Ping")
-            .setEmoji("<:emoji_news:1005004305385926716>")
-            .setCustomId("buttonNewsID")
-
-        var buttonContent = new Discord.MessageButton()
-            .setStyle("SECONDARY")
-            .setLabel("Content Ping")
-            .setEmoji("<:emoji_contents:1005004303121010749>")
-            .setCustomId("buttonContentID")
-
-        var buttonAll = new Discord.MessageButton()
-            .setStyle("SECONDARY")
-            .setLabel("All Pings")
-            .setEmoji("<:emoji_bell:1005014186843193395>")
-            .setCustomId("buttonAllID")
-
-        var rowRoles = new Discord.MessageActionRow()
-            .addComponents(buttonNews, buttonContent, buttonAll)
-
-        interaction.reply({ embeds: [embedAssignRoles1, embedAssignRoles2], components: [rowRoles], ephemeral: true })
-    }
-
-    // Get Started
-        // Page 1 - Roles Info
-    if (interaction.customId == "buttonGetStartedID") {   
-        var embedRolesInfo1 = new Discord.MessageEmbed()
-            .setColor("#2B2D31")
-            .setImage("https://media.discordapp.net/attachments/1077684809725390869/1077709040886501396/Roles_Info.png?width=1440&height=359")
-
-        var embedRolesInfo2 = new Discord.MessageEmbed()
-            .setColor("#2B2D31")
-            .setDescription("<:IconDot:1100515652457992234> **Server Roles Information** \nQuali sono i ruoli del server, cosa fanno e come li ottieni? \n\n<@&1099456728451514439> \nI Bot Discord personalizzati che DARK3R ha creato appositamente per questo server. Questo ruolo non può essere ottenuto. \n\n<@&1100180052051763230> \nMantengono la pace in tutto il server e aiutano i membri se hanno un problema. Non sono perfetti, quindi possono anche commettere errori. Questo ruolo viene assegnato solo a persone fidate dagli Amministratori. \n\n<@&1100355896611180605> \nSono utili intelligenze artificiali che possono eseguire automaticamente diverse attività utili sul nostro server. Ciò include vietare i piantagrane, moderare la discussione, riprodurre musica sul nostro server e così via.")
-
-        var buttonPreviousPage1 = new Discord.MessageButton()   
-            .setStyle("SECONDARY")
-            .setLabel("Previous Page")
-            .setEmoji("<:emoji_previous:1005026535394250782>")
-            .setCustomId("buttonPreviousPage1ID")
+            .setLabel("Accept")
+            .setEmoji("<:emoji_circleplus:1012348409769902080>")
+            .setCustomId("buttonAcceptID")
             .setDisabled(true)
 
-        var buttonNextPage1 = new Discord.MessageButton()   
-            .setStyle("SECONDARY")
-            .setLabel("Next Page")
-            .setEmoji("<:emoji_next:1005026537789202452>")
-            .setCustomId("buttonNextPage1ID")
+        var rowAccept = new Discord.MessageActionRow()
+            .addComponents(buttonAccept)
 
-        var rowPage1 = new Discord.MessageActionRow()
-            .addComponents(buttonPreviousPage1, buttonNextPage1)
-
-        interaction.reply({ embeds: [embedRolesInfo1, embedRolesInfo2], components: [rowPage1], ephemeral: true })
+        await player.roles.add(roleSMPMember);
+        await channelPandesalTownhall.send({ content: `- <@${userId}> si è unito a Pandesal SMP` });
+        await interaction.update({ components: [rowAccept] });
+        await thread.delete();
     }
 
-    if (interaction.customId == "buttonPreviousPage2ID") {
-        var embedRolesInfo1 = new Discord.MessageEmbed()
-            .setColor("#2B2D31")
-            .setImage("https://media.discordapp.net/attachments/1077684809725390869/1077709040886501396/Roles_Info.png?width=1440&height=359")
+    // Deny
+    if (interaction.customId == "buttonDenyID") {
+        const user = interaction.message.embeds[0].author.name;
 
-        var embedRolesInfo2 = new Discord.MessageEmbed()
-            .setColor("#2B2D31")
-            .setDescription("<:IconDot:1100515652457992234> **Server Roles Information** \nQuali sono i ruoli del server, cosa fanno e come li ottieni? \n\n<@&1099456728451514439> \nI Bot Discord personalizzati che DARK3R ha creato appositamente per questo server. Questo ruolo non può essere ottenuto. \n\n<@&1100180052051763230> \nMantengono la pace in tutto il server e aiutano i membri se hanno un problema. Non sono perfetti, quindi possono anche commettere errori. Questo ruolo viene assegnato solo a persone fidate dagli Amministratori. \n\n<@&1100355896611180605> \nSono utili intelligenze artificiali che possono eseguire automaticamente diverse attività utili sul nostro server. Ciò include vietare i piantagrane, moderare la discussione, riprodurre musica sul nostro server e così via.")
+        const threadId = await interaction.message.embeds[0].footer.text;
+        const thread = await client.channels.cache.get(threadId);
 
-        var buttonPreviousPage1 = new Discord.MessageButton()   
+        var embedDeny = new Discord.MessageEmbed()
+            .setColor("#2B2D31")
+            .setDescription(`Caro <@${user}>, \n\nGrazie per aver mostrato interesse per il nostro server Minecraft. Purtroppo, dopo un'attenta valutazione della tua richiesta, al momento non siamo in grado di concederti l'accesso al nostro server. Ti invitiamo tuttavia a presentare nuovamente domanda in futuro. \n\nCordiali saluti, \nTeam amministrativo di PandesalSMP`)
+
+        var buttonDeny = new Discord.MessageButton()
             .setStyle("SECONDARY")
-            .setLabel("Previous Page")
-            .setEmoji("<:emoji_previous:1005026535394250782>")
-            .setCustomId("buttonPreviousPage1ID")
+            .setLabel("Deny")
+            .setEmoji("<:emoji_circlecross:1067128052615753748>")
+            .setCustomId("buttonDenyID")
             .setDisabled(true)
 
-        var buttonNextPage1 = new Discord.MessageButton()   
-            .setStyle("SECONDARY")
-            .setLabel("Next Page")
-            .setEmoji("<:emoji_next:1005026537789202452>")
-            .setCustomId("buttonNextPage1ID")
+        var rowDeny = new Discord.MessageActionRow()
+            .addComponents(buttonDeny)
 
-        var rowPage1 = new Discord.MessageActionRow()
-            .addComponents(buttonPreviousPage1, buttonNextPage1)
-
-        interaction.update({ embeds: [embedRolesInfo1, embedRolesInfo2], components: [rowPage1], ephemeral: true })
+        await interaction.update({ components: [rowDeny] })
+        await thread.send({ embeds: [embedDeny] })
     }
 
-    // Get Started
-        // Page 2 - Roles Info
-    if (interaction.customId == "buttonNextPage1ID" || interaction.customId == "buttonPreviousPage3ID") {
-        var embedRolesInfo3 = new Discord.MessageEmbed()
-            .setColor("#2B2D31")
-            .setImage("https://media.discordapp.net/attachments/1077684809725390869/1077709040886501396/Roles_Info.png?width=1440&height=359")
+    // User Limit
+    if (interaction.customId == "buttonUserLimitID") {
+        const modalUserLimit = new Discord.Modal()
+            .setTitle("Imposta il limiti di utenti")
+            .setCustomId("modalUserLimitID")
 
-        var embedRolesInfo4 = new Discord.MessageEmbed()
-            .setColor("#2B2D31")
-            .setDescription("<@&1100356406680502334> \nSono i sostenitori sulla pagina Facebook di DARK3R. Puoi ottenere questo ruolo se acquisti un badge di sostenitore. Se il canale YouTube di DARK3R ha un abbonamento, puoi ottenerlo anche lì quando ti iscrivi. \n\n<@&988436752278646825> \nSono le persone più ricche e fantastiche dell'intero server. A causa del loro Boost, il server può sbloccare vari vantaggi. Discord darà loro anche un'icona Boost accanto al loro nome su questo server. Questo ruolo può essere ottenuto potenziando il server. \n\n<@&1100177512081920070> \nSono i membri che giocano sul server Minecraft chiamato PandesalSMP. Hanno accesso ai canali PandesalSMP e al server Minecraft. Questo ruolo può essere ottenuto compilando il modulo Minecraft. \n\n <@&748109416322301964> \nI membri con questo ruolo hanno accesso a tutti i canali sul server (esclusi i canali privati). Questo ruolo lo ottieni quando entri nel server.")
+        const limit = new Discord.TextInputComponent()
+            .setCustomId("limitID")
+            .setLabel("Inserisci un valore tra 1 e 99")
+            .setPlaceholder("Write value here")
+            .setStyle("SHORT")
+            .setRequired(true)
 
-        var buttonPreviousPage2 = new Discord.MessageButton()
-            .setStyle("SECONDARY")
-            .setLabel("Previous Page")
-            .setEmoji("<:emoji_previous:1005026535394250782>")
-            .setCustomId("buttonPreviousPage2ID")
+        const rowLimit = new Discord.MessageActionRow()
+            .addComponents(limit)
 
-        var buttonNextPage2 = new Discord.MessageButton()
-            .setStyle("SECONDARY")
-            .setLabel("Next Page")
-            .setEmoji("<:emoji_next:1005026537789202452>")
-            .setCustomId("buttonNextPage2ID")
+        modalUserLimit.addComponents(rowLimit);
 
-        var rowPage2 = new Discord.MessageActionRow()
-            .addComponents(buttonPreviousPage2, buttonNextPage2)
-
-        interaction.update({ embeds: [embedRolesInfo3, embedRolesInfo4], components: [rowPage2], ephemeral: true })
+        await interaction.showModal(modalUserLimit);
     }
 
-    // Get Started
-        // Page 3 - Content Role
-    if (interaction.customId == "buttonNextPage2ID" || interaction.customId == "buttonPreviousPage4ID") {
-        var embedContentRole1 = new Discord.MessageEmbed()
-            .setColor("#2B2D31")
-            .setImage("https://media.discordapp.net/attachments/1077684809725390869/1077709020242128906/Content_Role.png?width=1440&height=359")
+    // Private VC
+    if (interaction.customId == "buttonPrivateVCID") {
+        const voiceChannel = interaction.member.voice.channel;
 
-        var embedContentRole2 = new Discord.MessageEmbed()
-            .setColor("#2B2D31")
-            .setDescription("<:IconDot:1100515652457992234> **Content Creators Role** \n<@&1100180049933635585> creano attivamente contenuti diversi per i propri follower. Sono Youtuber, Facebook Streamer, Twitch Streamer e così via. Questo ruolo può essere ottenuto se soddisfi i requisiti per i creatori di contenuti. \n\n<:IconDot:1100515652457992234> **Come ottenere il ruolo Content Creator?** \nDevi essere attivamente in streaming, caricare video o pubblicare sulla tua pagina o canale. Condividi il link della tua pagina o del tuo canale in <#1100174848518537307>, se possibile.")
-            .addFields
-            (
-                { name: "YouTubers:", value: "⇀ Oltre 1 000 Iscritti \n⇀ Oltre 10 000 Views \n⇀ Account collegato all'account Discord", inline: true },
-                { name: "Twitch Streamers:", value: "⇀ Affiliazione Twitch \n⇀ Oltre 100 Followers \n⇀ Account collegato all'account Discord", inline: true },
-                { name: "Facebook Streamers:", value: "⇀ Level Up Streamer \n⇀ Oltre 100 Followers \n⇀ Se possibile avere il collegamento alla pagina", inline: true },
-            )
-
-        var buttonPreviuosPage3 = new Discord.MessageButton()
-            .setStyle("SECONDARY")
-            .setLabel("Previous Page")
-            .setEmoji("<:emoji_previous:1005026535394250782>")
-            .setCustomId("buttonPreviousPage3ID")
-
-        var buttonNextPage3 = new Discord.MessageButton()
-            .setStyle("SECONDARY")
-            .setLabel("Next Page")
-            .setEmoji("<:emoji_next:1005026537789202452>")
-            .setCustomId("buttonNextPage3ID")
-
-        var rowPage3 = new Discord.MessageActionRow()
-            .addComponents(buttonPreviuosPage3, buttonNextPage3)
-
-        interaction.update({ embeds: [embedContentRole1, embedContentRole2], components: [rowPage3], ephemeral: true })
-    }
-
-    // Get Started
-        // Page 4 - Create Tickets
-    if (interaction.customId == "buttonNextPage3ID" || interaction.customId == "buttonPreviousPage5ID") {
-        var embedCreateTickets1 = new Discord.MessageEmbed()
-            .setColor("#2B2D31")
-            .setImage("https://media.discordapp.net/attachments/1077684809725390869/1077708981142827149/Create_Tickets.png?width=1440&height=359")
-
-        var embedCreateTickets2 = new Discord.MessageEmbed()
-            .setColor("#2B2D31")
-            .setDescription("<:IconDot:1100515652457992234> **Crea un Support Tickets** \nSe hai un problema e hai bisogno di aiuto, vai su <#1097996541387620352> e crea un ticket in modo che i moderatori possano aiutarti. Se crei un ticket senza motivo, verrai avvisato. \n\n<:IconDot:1100515652457992234> **Puoi creare un ticket per...** \n<:ReplyContinued:1022586643506528336> Segnalare un Membro \r<:ReplyContinued:1022586643506528336> Segnalare un Bug del Server \r<:ReplyContinued:1022586643506528336> Reclamare il tuo Ruolo \r<:Reply:1022586641908514966> Chiedere qualcosa di Importante")
+        if (interaction.channel != voiceChannel)
+            await interaction.reply({ content: "Scusa, puoi farlo solo nel tuo canale!", ephemeral: true })
         
-        var buttonPreviousPage4 = new Discord.MessageButton()
-            .setStyle("SECONDARY")
-            .setLabel("Previous Page")
-            .setEmoji("<:emoji_previous:1005026535394250782>")
-            .setCustomId("buttonPreviousPage4ID")
+        try {
+            await voiceChannel.permissionOverwrites.edit(interaction.guild.roles.everyone, {
+                CONNECT: !voiceChannel.permissionsFor(interaction.guild.roles.everyone).has('CONNECT'),
+            });
 
-        var buttonNextPage4 = new Discord.MessageButton()
-            .setStyle("SECONDARY")
-            .setLabel("Next Page")
-            .setEmoji("<:emoji_next:1005026537789202452>")
-            .setCustomId("buttonNextPage4ID")
+            const isChannelPublic = interaction.channel.permissionsFor(interaction.guild.roles.everyone).has('CONNECT');
+            const privacyStatus = isChannelPublic ? 'Pubblico' : 'Privato';
 
-        var rowPage4 = new Discord.MessageActionRow()
-            .addComponents(buttonPreviousPage4, buttonNextPage4)
-        
-        interaction.update({ embeds: [embedCreateTickets1, embedCreateTickets2], components: [rowPage4], ephemeral: true })
+            return interaction.reply({ content: `<@${interaction.user.id}> ha impostato la visibilità del canale su: ${privacyStatus}`, allowedMentions: { parse: [] } });
+    } catch (error) {
+        console.error(error);
+        return interaction.reply({ content: "Qualcosa è andato storto. Riprova più tardi.", ephemeral: true })
     }
-
-    // Get Started
-        // Page 5 - Hooray!
-    if (interaction.customId == "buttonNextPage4ID") {
-        var embedHooray1 = new Discord.MessageEmbed()
-            .setColor("#2B2D31")
-            .setImage("https://media.discordapp.net/attachments/1077684809725390869/1077709005482360913/Hooray.png?width=1440&height=359")
-
-        var embedHooray2 = new Discord.MessageEmbed()
-            .setColor("#2B2D31")
-            .setDescription("<:IconDot:1100515652457992234> **Hooray... Ce l'hai fatta!** \nAncora una volta, benvenuto in DARK3R's Land. Ora puoi inviare un messaggio in <#960536198143676496> e presentarti. Se non vedi questo canale, potresti non essere ancora verificato.")
-
-        var buttonPreviousPage5 = new Discord.MessageButton()
-            .setStyle("SECONDARY")
-            .setLabel("Previous Page")
-            .setEmoji("<:emoji_previous:1005026535394250782>")
-            .setCustomId("buttonPreviousPage5ID")
-
-        var buttonNextPage5 = new Discord.MessageButton()
-            .setStyle("SECONDARY")
-            .setLabel("Next Page")
-            .setEmoji("<:emoji_next:1005026537789202452>")
-            .setCustomId("buttonNextPage5ID")
-            .setDisabled(true)
-
-        var rowPage5 = new Discord.MessageActionRow()
-            .addComponents(buttonPreviousPage5, buttonNextPage5)
-
-        interaction.update({ embeds: [embedHooray1, embedHooray2], components: [rowPage5], ephemeral: true })
-    }
-
-    // Assegnazione Ruoli
-    if (interaction.customId == "buttonNewsID") {
-        interaction.deferUpdate()
-
-        await interaction.member.roles.add("1100367628574400604")
-        await interaction.followUp({ content: "Gave you the <@&1100367628574400604> role!", ephemeral: true })
-    }
-
-    if (interaction.customId == "buttonNewsID") {
-        interaction.deferUpdate()
-    
-        await interaction.member.roles.add("1100367636975587399")
-        await interaction.followUp({ content: "Gave you the <@&1100367636975587399> role!", ephemeral: true })
-    }
-
-    if (interaction.customId == "buttonAllID") {
-        interaction.deferUpdate()
-    
-        await interaction.member.roles.add("1100367628574400604")
-        await interaction.followUp({ content: "Gave you the <@&1100367628574400604> and <@&1100367636975587399> roles!", ephemeral: true })
-    }
-
-    // Ask Questions
-    if (interaction.customId == "buttonAskQuestionsID") {
-        await interaction.deferUpdate()
-
-        const everyone = interaction.guild.roles.cache.find(r => r.name === "@everyone")
-
-        interaction.guild.channels.create(`ticket-${interaction.user.username}`, {
-            type: "GUILD_TEXT",
-            parent: "1100161926929068072",
-            topic: interaction.user.id,
-            permissionOverwrites:
-            [
-                { id: interaction.user.id, allow: ["VIEW_CHANNEL", "SEND_MESSAGES"] },
-                { id: everyone.id, deny: ["VIEW_CHANNEL", "SEND_MESSAGES"] }
-            ]
-        }).then(c => {
-            var embedAskQuestions = new Discord.MessageEmbed()
-                .setColor("cecece")
-                .setDescription("**Ticket Creato!** \nSi prega di fornire alcuni dettagli in attesa della risposta. Grazie!")
-                .setFooter({ text: "Categoria: Ask Questions" })
-
-            var buttonCloseTicket = new Discord.MessageButton()
-                .setStyle("SECONDARY")
-                .setLabel("Close Ticket")
-                .setEmoji("<:emoji_logout:1011132089774657587>")
-                .setCustomId("buttonCloseTicketID")
-
-            var buttonDeleteTicket = new Discord.MessageButton()
-                .setStyle("SECONDARY")
-                .setLabel("Delete Ticket")
-                .setEmoji("<:emoji_trash:1010906896762408970>")
-                .setCustomId("buttonDeleteTicketID")
-
-            var rowAskQuestions = new Discord.MessageActionRow()
-                .addComponents(buttonCloseTicket, buttonDeleteTicket)
-
-            c.send({ content: `${interaction.user}`, embeds: [embedAskQuestions], components: [rowAskQuestions] })
-        })
-
-        interaction.followUp({ content: `Ticket Creato! #ticket-${interaction.user.username}`, ephemeral: true })
-    }
-
-    // Report Users
-    if (interaction.customId == "buttonReportUsersID") {
-        await interaction.deferUpdate()
-
-        const everyone = interaction.guild.roles.cache.find(r => r.name === "@everyone")
-
-        interaction.guild.channels.create(`ticket-${interaction.user.username}`, {
-            type: "GUILD_TEXT",
-            parent: "1100161926929068072",
-            topic: interaction.user.id,
-            permissionOverwrites:
-            [
-                { id: interaction.user.id, allow: ["VIEW_CHANNEL", "SEND_MESSAGES"] },
-                { id: everyone.id, deny: ["VIEW_CHANNEL", "SEND_MESSAGES"] }
-            ]
-        }).then(c => {
-            var embedReportUsers = new Discord.MessageEmbed()
-                .setColor("cecece")
-                .setDescription("**Ticket Creato!** \nSi prega di fornire alcuni dettagli in attesa della risposta. Grazie!")
-                .setFooter({ text: "Categoria: Report Users" })
-
-            var buttonCloseTicket = new Discord.MessageButton()
-                .setStyle("SECONDARY")
-                .setLabel("Close Ticket")
-                .setEmoji("<:emoji_logout:1011132089774657587>")
-                .setCustomId("buttonCloseTicketID")
-
-            var buttonDeleteTicket = new Discord.MessageButton()
-                .setStyle("SECONDARY")
-                .setLabel("Delete Ticket")
-                .setEmoji("<:emoji_trash:1010906896762408970>")
-                .setCustomId("buttonDeleteTicketID")
-
-            var rowReportUsers = new Discord.MessageActionRow()
-                .addComponents(buttonCloseTicket, buttonDeleteTicket)
-
-            c.send({ content: `${interaction.user}`, embeds: [embedReportUsers], components: [rowReportUsers] })
-        })
-
-        interaction.followUp({ content: `Ticket Creato! #ticket-${interaction.user.username}`, ephemeral: true })
-    }
-
-    // Other Concerns
-    if (interaction.customId == "buttonOtherConcernsID") {
-        await interaction.deferUpdate()
-
-        const everyone = interaction.guild.roles.cache.find(r => r.name === "@everyone")
-
-        interaction.guild.channels.create(`ticket-${interaction.user.username}`, {
-            type: "GUILD_TEXT",
-            parent: "1100161926929068072",
-            topic: interaction.user.id,
-            permissionOverwrites:
-            [
-                { id: interaction.user.id, allow: ["VIEW_CHANNEL", "SEND_MESSAGES"] },
-                { id: everyone.id, deny: ["VIEW_CHANNEL", "SEND_MESSAGES"] }
-            ]
-        }).then(c => {
-            var embedOtherConcerns = new Discord.MessageEmbed()
-                .setColor("cecece")
-                .setDescription("**Ticket Creato!** \nSi prega di fornire alcuni dettagli in attesa della risposta. Grazie!")
-                .setFooter({ text: "Categoria: Other Concerns" })
-
-            var buttonCloseTicket = new Discord.MessageButton()
-                .setStyle("SECONDARY")
-                .setLabel("Close Ticket")
-                .setEmoji("<:emoji_logout:1011132089774657587>")
-                .setCustomId("buttonCloseTicketID")
-
-            var buttonDeleteTicket = new Discord.MessageButton()
-                .setStyle("SECONDARY")
-                .setLabel("Delete Ticket")
-                .setEmoji("<:emoji_trash:1010906896762408970>")
-                .setCustomId("buttonDeleteTicketID")
-
-            var rowOtherConcerns = new Discord.MessageActionRow()
-                .addComponents(buttonCloseTicket, buttonDeleteTicket)
-
-            c.send({ content: `${interaction.user}`, embeds: [embedOtherConcerns], components: [rowOtherConcerns] })
-        })
-
-        interaction.followUp({ content: `Ticket Creato! #ticket-${interaction.user.username}`, ephemeral: true })
-    }
-
-    // Close & Delete Ticket
-    if (interaction.customId == "buttonDeleteTicketID" || interaction.customId == "buttonCloseTicketID") {
-        await interaction.reply({ content: "Chiusura ticket in alcuni secondi", ephemeral: true })
-
-        setTimeout(async function() {
-            await interaction.channel.delete();
-        }, 5000)
     }
 })
+
+client.on("interactionCreate", async (interaction) => {
+    if (!interaction.isModalSubmit()) return;
+
+    // Application Form
+    if (interaction.customId === "modalApplicationFormID") {
+        const channelApplicationForm = client.channels.cache.get("1140591124843593860");
+
+        const username = interaction.fields.getTextInputValue("usernameID");
+        const age = interaction.fields.getTextInputValue("ageID");
+        const edition = interaction.fields.getTextInputValue("editionID");
+        const type = interaction.fields.getTextInputValue("typeID");
+        const motivation = interaction.fields.getTextInputValue("motivationID");
+
+        var embedForm1 = new Discord.MessageEmbed()
+            .setColor("#2B2D31")
+            .setAuthor({ name: `${interaction.user.username}`, iconURL: interaction.user.avatarURL({ dynamic: true }) })
+            .addFields
+            (
+                { name: "What is your Minecraft username?", value: "```" + username + "```", inline: false },
+                { name: "How old are you?", value: "```" + age + "```", inline: false },
+                { name: "What edition are you using?", value: "```" + edition + "```", inline: false },
+                { name: "If you using Minecraft Java, Premium or Cracked?", value: "```" + type + "```", inline: false },
+                { name: "Why should we accept you to this SMP?", value: "```" + motivation + "```", inline: false },
+            )
+
+        var buttonAccept = new Discord.MessageButton()
+            .setStyle("SECONDARY")
+            .setLabel("Accept")
+            .setEmoji("<:emoji_circleplus:1012348409769902080>")
+            .setCustomId("buttonAcceptID")
+
+        var buttonDeny = new Discord.MessageButton()
+            .setStyle("SECONDARY")
+            .setLabel("Deny")
+            .setEmoji("<:emoji_circlecross:1067128052615753748>")
+            .setCustomId("buttonDenyID")
+
+        var rowResponse = new Discord.MessageActionRow()
+            .addComponents(buttonAccept, buttonDeny)
+
+        const thread = await interaction.channel.threads.create({
+            name: `form-${interaction.user.username}`,
+            autoArchiveDuration: 60,
+            type: "GUILD_PRIVATE_THREAD"
+        })
+
+        var embedForm2 = new Discord.MessageEmbed()
+            .setColor("#2B2D31")
+            .setAuthor({ name: `${interaction.user.id}`, iconURL: interaction.user.avatarURL({ dynamic: true }) })
+            .setFooter({ text: `${thread.id}` })
+            .setTimestamp()
+            .addFields
+            (
+                { name: "What is your Minecraft username?", value: "```" + username + "```", inline: false },
+                { name: "How old are you?", value: "```" + age + "```", inline: false },
+                { name: "What edition are you using?", value: "```" + edition + "```", inline: false },
+                { name: "If you using Minecraft Java, Premium or Cracked?", value: "```" + type + "```", inline: false },
+                { name: "Why should we accept you to this SMP?", value: "```" + motivation + "```", inline: false },
+            )
+
+        await thread.members.add(interaction.user.id);
+        await interaction.reply({ content: `Il modulo di domanda è stato inviato! <#${thread.id}>`, ephemeral: true });
+        await thread.send({ embeds: [embedForm1] });
+        await channelApplicationForm.send({ embeds: [embedForm2], components: [rowResponse] });
+    }
+    
+    // User Limit
+    if (interaction.customId === "modalUserLimitID") {
+        const limit = interaction.fields.getTextInputValue("limitID");
+
+        await interaction.channel.setUserLimit(limit);
+        await interaction.reply({ content: `<@${interaction.user.id}> ha impostato il limite di utenti su: ${limit}`, allowedMentions: { parse: [], }});
+    }
+})
+
+// Vocale
+
+var voiceManager = new Discord.Collection()
+
+client.on("voiceStateUpdate", async (oS, nS) => {
+    const { member, guild } = oS;
+    const newChannel = nS.channel;
+    const oldChannel = oS.channel;
+    const JTC = "1186100330669293588";
+
+    var buttonUserLimit = new Discord.MessageButton()
+        .setStyle("SECONDARY")
+        .setLabel("User Limit")
+        .setEmoji("<:emoji_person:1005010359024877598>")
+        .setCustomId("buttonUserLimitID")
+
+    var buttonPrivateVC = new Discord.MessageButton()
+        .setStyle("SECONDARY")
+        .setLabel("Private VC")
+        .setEmoji("<:emoji_lock:1081997893189238864>")
+        .setCustomId("buttonPrivateVCID")
+
+    var rowVC = new Discord.MessageActionRow()
+        .addComponents(buttonUserLimit, buttonPrivateVC)
+
+    if (oldChannel !== newChannel && newChannel && newChannel.id === JTC) {
+        const voiceChannel = await guild.channels.create(
+            `${member.user.username}`,
+            {
+                type: "GUILD_VOICE",
+                parent: newChannel.parent,
+                permissionOverwrites:
+                    [
+                        { id: member.id, allow: ["CONNECT", "MOVE_MEMBERS"] },
+                        { id: guild.id, allow: ["CONNECT"] },
+                    ],
+            });
+
+        await voiceChannel.send({ content: "Gestisci il tuo canale vocale qui", components: [rowVC] });
+        await voiceManager.set(member.id, voiceChannel.id);
+        await newChannel.permissionOverwrites.edit(member, { CONNECT: true } );
+
+        setTimeout(() => {
+            newChannel.permissionOverwrites.delete(member);
+        }, 30 * 1000);
+
+        return setTimeout(() => {
+            member.voice.setChannel(voiceChannel);
+        }, 600);
+    }
+
+    const JTCCHANNEL = voiceManager.get(member.id);
+    const members = oldChannel?.members.filter((m) => !m.user.bot).map((m) => m.id);
+
+    if (JTCCHANNEL && oldChannel.id === JTCCHANNEL && (!newChannel || newChannel.id !== JTCCHANNEL)) {
+        if (members.length > 0)
+        {
+            var randomID = members[Math.floor(Math.random() * members.length)];
+            var randomMember = guild.members.cache.get(randomID);
+            randomMember.voice.setChannel(oldChannel);
+            oldChannel.permissionOverwrites.edit(randomMember, { CONNECT: true, MANAGE_CHANNELS: true } );
+
+            voiceManager.set(member.id, null);
+            voiceManager.set(randomMember.id, oldChannel.id);
+        }
+        else
+        {
+            voiceManager.set(member.id, null);
+            oldChannel.delete().catch((e) => null);
+        }
+    }
+});
+
+// Join
+
+client.on("guildMemberAdd", async (member) => {
+    const ROLE_ID = "1140360510978662430";
+    const roleLandCitizen = member.guild.roles.cache.get(ROLE_ID);
+
+    if (roleLandCitizen)
+        member.roles.add(roleLandCitizen)
+})
+
