@@ -4,10 +4,17 @@ const client = new Discord.Client({ intents: ["GUILDS", "GUILD_MEMBERS", "GUILD_
 // Comandi + Stato
 
 client.on('ready', () => {
-    client.user.setActivity("Land Citizens", { type: "LISTENING" }) // Online
-    // client.user.setStatus("idle") // Maintenance
+    client.user.setActivity("Land Citizens", { type: "LISTENING" }); // Online
+    // client.user.setStatus("idle"); // Maintenance
+
+    console.log(`${client.user.tag} is online`)
 
     client.guilds.cache.forEach(guild => {
+        guild.commands.create({
+            name: "donate",
+            description: "Scopri come supportare finanziariamente DARK3R's Land"
+        })
+
         guild.commands.create({
             name: "memberinfo",
             description: "Ottieni le informazioni sull'utente selezionato",
@@ -21,6 +28,20 @@ client.on('ready', () => {
                     }
                 ]
         })
+
+        guild.commands.create({
+            name: "report",
+            description: "Invia una segnalazione",
+            options:
+                [
+                    {
+                        name: "user",
+                        description: "Seleziona l'utente da segnalare",
+                        type: "USER",
+                        required: true
+                    }
+                ]
+        })
     })
 })
 
@@ -28,6 +49,20 @@ client.on('ready', () => {
 
 client.on("interactionCreate", async (interaction) => {
     if (!interaction.isCommand()) return
+
+    // /donate
+    if (interaction.commandName == "donate") {
+        var buttonDonate = new Discord.MessageButton()
+            .setStyle("LINK")
+            .setLabel("Donate")
+            .setEmoji("<:HeartIcon:1212896841558130748>")
+            .setURL("https://ko-fi.com/dark3r")
+
+        var rowDonate = new Discord.MessageActionRow()
+            .addComponents(buttonDonate)
+
+        interaction.reply({ content: "Se sei interessato a supportare il team di DARK3R's Land, consulta la nostra pagina Ko-Fi! Puoi aiutarci direttamente a compensare finanziariamente i nostri sviluppatori, creatori di contenuti e manager per il loro duro lavoro. Grazie!\n\nNon dimenticare di collegare il tuo account Discord a Ko-Fi per ricevere un ruolo speciale come Supporter.", components: [rowDonate], ephemeral: true })
+    }
 
     // /memberinfo
     if (interaction.commandName == "memberinfo") {
@@ -47,6 +82,37 @@ client.on("interactionCreate", async (interaction) => {
 
             interaction.reply({ embeds: [embedMemberInfo] })
     }
+
+    // /report
+    if (interaction.commandName == "report") {
+        const modalReport = new Discord.Modal()
+            .setTitle("Submit a Report")
+            .setCustomId("modalReportID")
+
+        const object = new Discord.TextInputComponent()
+            .setCustomId("objectID")
+            .setLabel("Object")
+            .setPlaceholder("Write text here")
+            .setStyle("SHORT")
+            .setRequired(true)
+
+        const description = new Discord.TextInputComponent()
+            .setCustomId("descriptionID")
+            .setLabel("Description")
+            .setPlaceholder("Write text here")
+            .setStyle("PARAGRAPH")
+            .setRequired(true)
+
+        const rowObject = new Discord.MessageActionRow()
+            .addComponents(object)
+
+        const rowDescription = new Discord.MessageActionRow()
+            .addComponents(description)
+
+        modalReport.addComponents(rowObject, rowDescription)
+
+        await interaction.showModal(modalReport);
+    }
 })
 
 // Messaggi
@@ -56,7 +122,7 @@ client.on("messageCreate", async (message) => {
     if (message.content == "?rules") {
         var embedRules = new Discord.MessageEmbed()
             .setColor("#2B2D31")
-            .setDescription("## <:RulesIcon:1187827242152251493> Regole \nLa tua presenza qui implica l'accettazione di queste regole e di eventuali aggiornamenti futuri. Le modifiche possono avvenire senza preavviso, quindi rimani aggiornato. Mostra comprensione quando i moderatori garantiscono un ambiente pacifico. \n\n- **Rispetta Tutti:** Tratta tutti i membri allo stesso modo e con rispetto, indipendentemente dalle differenze di credo. Non intraprendere alcuna forma di molestia, bullismo o attacchi mirati nei confronti degli altri membri. \n- **Family-Friendly:** Usa soprannomi e immagini del profilo rispettosi; evitare contenuti offensivi o innapropriati. Mantieni il server family-friendly evitando di pubblicare contenuti di natura sessuale. \n- **Canali Pertinenti:** Pubblica contenuti nei canali appropriati per mantenere le discussioni organizzate. Evita conversazioni fuori tema nei canali designati per argomenti specifici. \n- **Segui le Regole di Discord:** Rispetta i Termini di Servizio di Discord e le Linee Guida della Community.")
+            .setDescription("## <:RulesIcon:1187827242152251493> Regole\nLa tua presenza qui implica l'accettazione di queste regole e di eventuali aggiornamenti futuri. Le modifiche possono avvenire senza preavviso, quindi rimani aggiornato. Mostra comprensione quando i moderatori garantiscono un ambiente pacifico.\n\n- **Rispetta Tutti:** Tratta tutti i membri allo stesso modo e con rispetto, indipendentemente dalle differenze di credo. Non intraprendere alcuna forma di molestia, bullismo o attacchi mirati nei confronti degli altri membri\n- **Family-Friendly:** Usa soprannomi e immagini del profilo rispettosi; evitare contenuti offensivi o innapropriati. Mantieni il server family-friendly evitando di pubblicare contenuti di natura sessuale.\n- **Canali Pertinenti:** Pubblica contenuti nei canali appropriati per mantenere le discussioni organizzate. Evita conversazioni fuori tema nei canali designati per argomenti specifici.\n- **Segui le Regole di Discord:** Rispetta i Termini di Servizio di Discord e le Linee Guida della Community.")
 
         var buttonToS = new Discord.MessageButton()
             .setStyle("LINK")
@@ -75,21 +141,11 @@ client.on("messageCreate", async (message) => {
         await message.channel.send({ embeds: [embedRules], components: [rowLinks] })
     }
 
-    // #roles
-    if (message.content == "?roles") {
-        var embedServerRoles = new Discord.MessageEmbed()
-            .setColor("#2B2D31")
-            .setDescription("## <:RolesIcon:1187827243913842800> Ruoli \nQuali sono i ruoli sul server, cosa fanno e come si ottengono? \n\n- <@&1099456728451514439>: Bot specializzati per divertimento, organizzazione e funzionalità aggiuntive nella community. Assegnato dagli amministratori del server. \n- <@&1100180052051763230>: Team dedicato che mantiene un ambiente sicuro e piacevole rispettando le regole e promuovendo interazioni positive. Selezionato dagli amministratori del server. \n- <@&1100355896611180605>: Bot aggiuntivi utili per varie funzioni, scelti con cura per la community. Selezionato dagli amministratori del server. \n- <@&1100356406680502334>: Sostenitori della pagina Facebook di DARK3R o dell'iscrizione al canale YouTube. Ottenuto diventando sostenitore o membro. \n- <@&988436752278646825>: Individui generosi che potenziano il server con Discord Nitro, sbloccando vantaggi. Ottenuto potenziando il server. \n- <@&1100177512081920070>: Giocatori sul server PandesalSMP con accesso ai canali correlati. Ottenuto tramite un modulo di domanda di Minecraft. \n- <@&1100180049933635585>: Creatori attivi che producono contenuti per i propri follower su piattaforme come YouTube, Facebook, Twitch... . Ottenibile soddisfando i requisiti di creazione di contenuti e condividendo i link ai canali nel canale delle promozioni.")
-
-        await message.delete()
-        await message.channel.send({ embeds: [embedServerRoles] })
-    }
-
     // #form
     if (message.content == "?form") {
         var embedMinecraftForm = new Discord.MessageEmbed()
             .setColor("#2B2D31")
-            .setDescription("## <:FormsIcon:1187827246367514645> Minecraft Application Form \nPer unirti al nostro server Minecraft, leggi le regole del server e completa il modulo di richiesta. Esamineremo la tua domanda entro pochi giorni e ti faremo sapere se sei stato accettato. \n\n- **Respect Builds:** Sii rispettoso delle creazioni degli altri giocatori. Evita di danneggiare intenzionalmente o di prendere le loro cose senza permesso. Mostra gentilezza rispettando il loro lavoro. \n- **Fair Play:** Gioca onestamente senza imbrogliare o ottenere vantaggi ingiusti. Inoltre, astieniti dal creare dispositivi di redstone che potrebbero causare ritardi nel server e interrompere l'esperienza di tutti. \n- **Sii Gentile:** Tratta gli altri con rispetto ed empatia. Evita il bullismo o l'uso di un linguaggio offensivo. Chiedi sempre il permesso prima di impegnarti in un combattimento giocatore contro giocatore. Ricordati di divertirti e di collaborare all'interno della community SMP di Minecraft per promuovere un ambiente positivo e creativo.")
+            .setDescription("## <:FormsIcon:1187827246367514645> Minecraft Application Form\nPer unirti al nostro server Minecraft, leggi le regole del server e completa il modulo di richiesta. Esamineremo la tua domanda entro pochi giorni e ti faremo sapere se sei stato accettato.\n\n- **Respect Builds:** Sii rispettoso delle creazioni degli altri giocatori. Evita di danneggiare intenzionalmente o di prendere le loro cose senza permesso. Mostra gentilezza rispettando il loro lavoro.\n- **Fair Play:** Gioca onestamente senza imbrogliare o ottenere vantaggi ingiusti. Inoltre, astieniti dal creare dispositivi di redstone che potrebbero causare ritardi nel server e interrompere l'esperienza di tutti.\n- **Sii Gentile:** Tratta gli altri con rispetto ed empatia. Evita il bullismo o l'uso di un linguaggio offensivo. Chiedi sempre il permesso prima di impegnarti in un combattimento giocatore contro giocatore. Ricordati di divertirti e di collaborare all'interno della community SMP di Minecraft per promuovere un ambiente positivo e creativo.")
 
         var buttonApplicationForm = new Discord.MessageButton()
             .setStyle("SECONDARY")
@@ -104,11 +160,11 @@ client.on("messageCreate", async (message) => {
         await message.channel.send({ embeds: [embedMinecraftForm], components: [rowMinecraftForm] })
     }
 
-    // #pandesal-info
+    // #details
     if (message.content == "?pandesal-info") {
         var embedPandesalInfo = new Discord.MessageEmbed()
             .setColor("#2B2D31")
-            .setDescription("## <:PinIcon:1188206574922117170> Pandesal SMP Information \nQuesta categoria è riservata esclusivamente ai membri di Pandesal SMP. È uno spazio per la comunicazione, anche se non stai giocando a Minecraft. Ricevi aggiornamenti, notizie e annunci sulla nostra community SMP di Minecraft qui. \n\n- **Server Address:** pandesalmc.aternos.me \n- **Bedrock Port:** 29767")
+            .setDescription("## <:PinIcon:1188206574922117170> Pandesal SMP Information\nQuesta categoria è riservata esclusivamente ai membri di Pandesal SMP. È uno spazio per la comunicazione, anche se non stai giocando a Minecraft. Ricevi aggiornamenti, notizie e annunci sulla nostra community SMP di Minecraft qui. \n\n- **Server Address:** pandesalmc.aternos.me \n- **Bedrock Port:** 29767")
 
         var buttonHostingPartner = new Discord.MessageButton()
             .setStyle("LINK")
@@ -118,7 +174,7 @@ client.on("messageCreate", async (message) => {
         var buttonServerWebsite = new Discord.MessageButton()
             .setStyle("LINK")
             .setLabel("Server Website")
-            .setURL("https://pandesalmc.carrd.co")
+            .setURL("https://pandesalsmp.framer.website")
         
         var rowPandesalInfo = new Discord.MessageActionRow()
             .addComponents(buttonHostingPartner, buttonServerWebsite)
@@ -129,17 +185,7 @@ client.on("messageCreate", async (message) => {
 
     // @Land Droid
     if (message.content == "<@1057297659087573022>")
-        message.reply({ content: "Puoi usare `/` per vedere i comandi " })
-
-    // @Moderator
-    var pingModerator = ["<@&1100180052051763230>"]
-    var findModerator = false;
-
-    pingModerator.forEach(word => {
-        if (message.content.includes(word)) {
-            findModerator = true;
-        }
-    })
+        message.reply({ content: "Puoi usare `/` per vedere i comandi" })
 })
 
 // Bottoni
@@ -212,9 +258,9 @@ client.on("interactionCreate", async (interaction) => {
     if (interaction.customId == "buttonAcceptID") {
         const userId = await interaction.message.embeds[0].author.name;
         const player = await interaction.guild.members.fetch(userId);
-        const roleSMPMember = "1100177512081920070";
+        const roleSMPMember = "1241094643639259267";
 
-        const channelPandesalTownhall = client.channels.cache.get("1121815732724977665");
+        const channelPandesalTownhall = client.channels.cache.get("1240792965107159080");
         const threadId = await interaction.message.embeds[0].footer.text;
         const thread = await client.channels.cache.get(threadId);
 
@@ -308,7 +354,7 @@ client.on("interactionCreate", async (interaction) => {
 
     // Application Form
     if (interaction.customId === "modalApplicationFormID") {
-        const channelApplicationForm = client.channels.cache.get("1140591124843593860");
+        const channelApplicationForm = client.channels.cache.get("1240733273735434354");
 
         const username = interaction.fields.getTextInputValue("usernameID");
         const age = interaction.fields.getTextInputValue("ageID");
@@ -375,6 +421,31 @@ client.on("interactionCreate", async (interaction) => {
 
         await interaction.channel.setUserLimit(limit);
         await interaction.reply({ content: `<@${interaction.user.id}> ha impostato il limite di utenti su: ${limit}`, allowedMentions: { parse: [], }});
+    }
+
+    // Report
+    if (interaction.customId === "modalReportID") {
+        const channelReport = client.channels.cache.get("1242868677473341572");
+
+        const object = interaction.fields.getTextInputValue("objectID");
+        const description = interaction.fields.getTextInputValue("descriptionID");
+
+        var embedReport =  new Discord.MessageEmbed()
+            .setColor("#2B2D31")
+            .setAuthor({ name: `${interaction.user.username}`, iconURL: interaction.user.avatarURL({ dynamic: true }) })
+            .setTimestamp()
+            .addFields
+            (
+                { name: "Object:", value: "```" + object + "```", inline: false },
+                { name: "Description:", value: "```" + description + "```", inline: false },
+            )
+
+        var embedResponse = new Discord.MessageEmbed()
+            .setColor("#2B2D31")
+            .setDescription("<:CheckIcon:1129846699150561461> L'utente è stato segnalato. Grazie per la tua segnalazione!")
+
+        await interaction.reply({ embeds: [embedResponse], ephemeral: true })
+        await channelReport.send({ embeds: [embedReport] })
     }
 })
 
@@ -460,4 +531,3 @@ client.on("guildMemberAdd", async (member) => {
     if (roleLandCitizen)
         member.roles.add(roleLandCitizen)
 })
-
