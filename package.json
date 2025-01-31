@@ -1,5 +1,5 @@
 {
-  "name": "land_droid",
+  "name": "land-droid",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -9,7 +9,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "discord.js": "^13.15.1",
-    "yt-channel-info": "^3.1.0"
+    "discord.js": "^13.17.1"
   }
 }

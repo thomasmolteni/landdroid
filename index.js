@@ -1,9 +1,9 @@
 const Discord = require("discord.js");
 const client = new Discord.Client({ intents: ["GUILDS", "GUILD_MEMBERS", "GUILD_MESSAGES", "GUILD_INTEGRATIONS", "GUILD_PRESENCES", "GUILD_VOICE_STATES", "GUILD_SCHEDULED_EVENTS"] });
 
-// Comandi + Stato
+// ready
 
-client.on('ready', () => {
+client.on("ready", () => {
     client.user.setActivity("Land Citizens", { type: "LISTENING" }); // Online
     // client.user.setStatus("idle"); // Maintenance
 
@@ -45,7 +45,7 @@ client.on('ready', () => {
     })
 })
 
-// Risposta comandi
+// interactionCreate
 
 client.on("interactionCreate", async (interaction) => {
     if (!interaction.isCommand()) return
@@ -115,7 +115,7 @@ client.on("interactionCreate", async (interaction) => {
     }
 })
 
-// Messaggi
+// messageCreate
 
 client.on("messageCreate", async (message) => {
     // #rules
@@ -188,7 +188,7 @@ client.on("messageCreate", async (message) => {
         message.reply({ content: "Puoi usare `/` per vedere i comandi" })
 })
 
-// Bottoni
+// interactionCreate
 
 client.on("interactionCreate", async (interaction) => {
     if (!interaction.isButton()) return
@@ -349,6 +349,8 @@ client.on("interactionCreate", async (interaction) => {
     }
 })
 
+// interactionCreate
+
 client.on("interactionCreate", async (interaction) => {
     if (!interaction.isModalSubmit()) return;
 
@@ -449,7 +451,7 @@ client.on("interactionCreate", async (interaction) => {
     }
 })
 
-// Vocale
+// voiceStateUpdate
 
 var voiceManager = new Discord.Collection()
 
@@ -481,7 +483,8 @@ client.on("voiceStateUpdate", async (oS, nS) => {
                 type: "GUILD_VOICE",
                 parent: newChannel.parent,
                 permissionOverwrites:
-                    [
+                    [   
+                        { id: "1241092172430839848", allow: ["CONNECT", "MOVE_MEMBERS"] },
                         { id: member.id, allow: ["CONNECT", "MOVE_MEMBERS"] },
                         { id: guild.id, allow: ["CONNECT"] },
                     ],
@@ -522,11 +525,10 @@ client.on("voiceStateUpdate", async (oS, nS) => {
     }
 });
 
-// Join
+// guildMemberAdd
 
 client.on("guildMemberAdd", async (member) => {
-    const ROLE_ID = "1140360510978662430";
-    const roleLandCitizen = member.guild.roles.cache.get(ROLE_ID);
+    const roleLandCitizen = member.guild.roles.cache.get("1140360510978662430");
 
     if (roleLandCitizen)
         member.roles.add(roleLandCitizen)
